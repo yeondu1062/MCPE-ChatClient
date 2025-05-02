@@ -315,13 +315,6 @@
     const chatDiv = document.getElementById('chat');
     const socket = io();  // 서버와 소켓 연결
 
-    // 초기 메시지 추가
-    const initialMessage = document.createElement('div');
-    initialMessage.classList.add('message');
-    initialMessage.textContent = '[CONSOLE] 세션 연결됨';
-    chatDiv.appendChild(initialMessage);
-    chatDiv.scrollTop = chatDiv.scrollHeight;
-
     // 서버로부터 chat_message 이벤트를 받을 때
     socket.on('chat_message', (message) => {
       const messageDiv = document.createElement('div');
