@@ -3,30 +3,276 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chat Client</title>
+  <title>Minecraft Chat Client</title>
+  <!-- main.css의 내용을 style 태그로 삽입 -->
   <style>
+    /* Light mode (default) */
     body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
+        background-color: #abc1d1;
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
     }
+
+    body, .header, #chat, .message, #inputArea, #messageInput {
+        transition: all 0.3s ease;
+    }
+
+    /* Dark mode */
+    body.dark-mode {
+        background-color: #1e1e1e;
+    }
+
+    body.dark-mode .header {
+        background-color: #1e1e1e;
+    }
+
+    body.dark-mode .channel-name {
+        color: #ffffff;
+    }
+
+    body.dark-mode .icon-button {
+        color: #ffffff;
+    }
+
+    body.dark-mode #chat {
+        background-color: #1e1e1e;
+    }
+
+    body.dark-mode .message {
+        background-color: #2d2d2d;
+        color: #ffffff;
+        box-shadow: 0 1px 2px rgba(255, 255, 255, 0.05);
+    }
+
+    body.dark-mode .message[data-sender="me"] {
+        background-color: #3a3a3a;
+    }
+
+    body.dark-mode .system-message {
+        color: #999;
+    }
+
+    body.dark-mode #inputArea {
+        background-color: #2d2d2d;
+        border-top: 5px solid #3a3a3a;
+    }
+
+    body.dark-mode #messageInput {
+        background-color: #3a3a3a;
+        color: #ffffff;
+    }
+
+    body.dark-mode #messageInput::placeholder {
+        color: #888888;
+    }
+
+    .header {
+        background-color: #abc1d1;
+        padding: 8px 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 60px;
+        flex-shrink: 0;
+        position: relative;
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .header-left img {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-left: -2%;
+    }
+
+    .channel-name {
+        color: #000000;
+        font-size: 15px;
+        font-weight: bold;
+        margin-top: -7%;
+    }
+
+    .header-right {
+        display: flex;
+        gap: 40px;
+        align-items: center;
+    }
+
+    .icon-button {
+        background: none;
+        border: none;
+        color: #000000;
+        padding: 3px;
+        cursor: pointer;
+        opacity: 0.8;
+        font-size: 19px;
+    }
+
+    .icon-button:hover {
+        opacity: 1;
+    }
+
+    .header::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background-color: rgba(0, 0, 0, 0.1);
+    }
+
     #chat {
-      border: 1px solid #ccc;
-      padding: 10px;
-      max-height: 400px;
-      overflow-y: scroll;
+        background-color: #abc1d1;
+        padding: 16px 16px 0;
+        padding-bottom: 50px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        position: fixed;
+        top: 60px;
+        left: 0;
+        right: 0;
+        bottom: 100px;
+        z-index: 1;
     }
+
     .message {
-      margin-bottom: 10px;
-      padding: 5px;
-      border-bottom: 1px solid #ddd;
+        background-color: #ffffff;
+        padding: 8px 12px;
+        margin-bottom: 8px;
+        color: #000000;
+        line-height: 1.4;
+        font-size: 14px;
+        max-width: 70%;
+        border-radius: 12px;
+        word-wrap: break-word;
+        display: inline-block;
+        margin-right: auto;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        clear: both;
     }
+
+    .message[data-sender="${client.username}"] {
+        background-color: #fee500;
+        margin-left: auto;
+        margin-right: 0;
+    }
+
+    .system-message {
+        text-align: center;
+        background-color: transparent;
+        color: #666;
+        font-size: 12px;
+        padding: 8px;
+        margin: 8px 0;
+        box-shadow: none;
+    }
+
     #inputArea {
-      margin-top: 20px;
+        background-color: #ffffff;
+        padding: 10px 16px;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 100px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-top: 1px solid #e6e6e6;
+        z-index: 2;
+    }
+
+    #messageInput {
+        flex: 1;
+        padding: 12px;
+        margin: 0;
+        border: none;
+        border-radius: 21px;
+        background-color: #f8f8f8;
+        color: #000000;
+        font-size: 14px;
+        outline: none;
+    }
+
+    #messageInput::placeholder {
+        color: #999999;
+    }
+
+    #messageInput:focus {
+        background-color: #f8f8f8;
+    }
+
+    #sendButton {
+        display: none;
+    }
+
+    ::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 0, 0, 0.3);
+    }
+
+    h1 {
+        color: #ffffff;
+    }
+
+    button {
+        background-color: #27ae60;
+        color: white;
+        padding: 12px 25px;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    button:active {
+        transform: translateY(0);
     }
   </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-  <h1>Chat Client</h1>
+  <div class="header">
+    <div class="header-left">
+      <!-- 프로필 이미지 삭제, 사용자 아이콘으로 대체 -->
+      <i class="fas fa-user-circle" style="font-size:36px; color:#4a90e2;"></i>
+      <span class="channel-name">ChatClient</span>
+    </div>
+    <div class="header-right">
+      <!-- 3줄(햄버거) 아이콘 버튼 삭제 -->
+      <button class="icon-button" id="darkModeToggle"><i class="fas fa-moon"></i></button>
+    </div>
+  </div>
   <div id="chat"></div>
   
   <!-- 텍스트 입력 폼 -->
@@ -37,28 +283,51 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
+    // 다크모드 토글 기능
+    document.addEventListener('DOMContentLoaded', () => {
+      const darkModeToggle = document.getElementById('darkModeToggle');
+      const body = document.body;
+      
+      // 저장된 테마 불러오기
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark') {
+        body.classList.add('dark-mode');
+        darkModeToggle.querySelector('i').classList.replace('fa-moon', 'fa-sun');
+      }
+
+      darkModeToggle.addEventListener('click', () => {
+        body.classList.toggle('dark-mode');
+        const isDark = body.classList.contains('dark-mode');
+        
+        // 아이콘 변경
+        const icon = darkModeToggle.querySelector('i');
+        if (isDark) {
+          icon.classList.replace('fa-moon', 'fa-sun');
+          localStorage.setItem('theme', 'dark');
+        } else {
+          icon.classList.replace('fa-sun', 'fa-moon');
+          localStorage.setItem('theme', 'light');
+        }
+      });
+    });
+
+    // 채팅 기능
+    const chatDiv = document.getElementById('chat');
     const socket = io();  // 서버와 소켓 연결
+
+    // 초기 메시지 추가
+    const initialMessage = document.createElement('div');
+    initialMessage.classList.add('message');
+    initialMessage.textContent = '[CONSOLE] 세션 연결됨';
+    chatDiv.appendChild(initialMessage);
+    chatDiv.scrollTop = chatDiv.scrollHeight;
 
     // 서버로부터 chat_message 이벤트를 받을 때
     socket.on('chat_message', (message) => {
-      const chatDiv = document.getElementById('chat');
       const messageDiv = document.createElement('div');
       messageDiv.classList.add('message');
       messageDiv.textContent = message;
       chatDiv.appendChild(messageDiv);
-      
-      // 스크롤을 최신 메시지로 자동으로 이동
-      chatDiv.scrollTop = chatDiv.scrollHeight;
-    });
-
-    socket.on('system_message', (message) => {
-      const chatDiv = document.getElementById('chat');
-      const messageDiv = document.createElement('div');
-      messageDiv.classList.add('message');
-      messageDiv.textContent = message;
-      chatDiv.appendChild(messageDiv);
-      
-      // 스크롤을 최신 메시지로 자동으로 이동
       chatDiv.scrollTop = chatDiv.scrollHeight;
     });
 
@@ -70,6 +339,18 @@
         document.getElementById('messageInput').value = '';  // 입력칸 초기화
       }
     };
+
+    // 엔터키 이벤트 리스너 추가
+    document.getElementById('messageInput').addEventListener('keypress', function(event) {
+      if (event.key === 'Enter') {
+        const message = this.value;
+        if (message.trim() !== '') {
+          socket.emit('send_chat_message', message);
+          this.value = '';
+        }
+      }
+    });
+
   </script>
 </body>
 </html>
