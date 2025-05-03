@@ -1,281 +1,186 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Minecraft Chat Client</title>
-  <!-- main.css의 내용을 style 태그로 삽입 -->
   <style>
-    /* Light mode (default) */
     body {
-        background-color: #abc1d1;
-        margin: 0;
-        padding: 0;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      background: #abc1d1;
+      overflow: hidden;
+      transition: background 0.3s;
     }
 
-    body, .header, #chat, .message, #inputArea, #messageInput {
-        transition: all 0.3s ease;
+    .dark-mode {
+      background: #1e1e1e;
     }
 
-    /* Dark mode */
-    body.dark-mode {
-        background-color: #1e1e1e;
-    }
-
-    body.dark-mode .header {
-        background-color: #1e1e1e;
-    }
-
-    body.dark-mode .channel-name {
-        color: #ffffff;
-    }
-
-    body.dark-mode .icon-button {
-        color: #ffffff;
-    }
-
-    body.dark-mode #chat {
-        background-color: #1e1e1e;
-    }
-
-    body.dark-mode .message {
-        background-color: #2d2d2d;
-        color: #ffffff;
-        box-shadow: 0 1px 2px rgba(255, 255, 255, 0.05);
-    }
-
-    body.dark-mode .message[data-sender="me"] {
-        background-color: #3a3a3a;
-    }
-
-    body.dark-mode .system-message {
-        color: #999;
-    }
-
-    body.dark-mode #inputArea {
-        background-color: #2d2d2d;
-        border-top: 5px solid #3a3a3a;
-    }
-
-    body.dark-mode #messageInput {
-        background-color: #3a3a3a;
-        color: #ffffff;
-    }
-
-    body.dark-mode #messageInput::placeholder {
-        color: #888888;
+    .header, #chat, .message, #inputArea, #messageInput {
+      transition: all 0.3s ease;
     }
 
     .header {
-        background-color: #abc1d1;
-        padding: 8px 16px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        height: 60px;
-        flex-shrink: 0;
-        position: relative;
+      background: inherit;
+      height: 60px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 16px;
+      border-bottom: 1px solid rgba(0,0,0,0.1);
     }
 
     .header-left {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .header-left img {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        object-fit: cover;
-        margin-left: -2%;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
     .channel-name {
-        color: #000000;
-        font-size: 15px;
-        font-weight: bold;
-        margin-top: -7%;
-    }
-
-    .header-right {
-        display: flex;
-        gap: 40px;
-        align-items: center;
+      font-size: 15px;
+      font-weight: bold;
     }
 
     .icon-button {
-        background: none;
-        border: none;
-        color: #000000;
-        padding: 3px;
-        cursor: pointer;
-        opacity: 0.8;
-        font-size: 19px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 19px;
+      opacity: 0.8;
+      color: #000;
     }
 
-    .icon-button:hover {
-        opacity: 1;
-    }
+    .icon-button:hover { opacity: 1; }
 
-    .header::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 1px;
-        background-color: rgba(0, 0, 0, 0.1);
+    .dark-mode .icon-button,
+    .dark-mode .channel-name {
+      color: #fff;
     }
 
     #chat {
-        background-color: #abc1d1;
-        padding: 16px 16px 0;
-        padding-bottom: 50px;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start;
-        position: fixed;
-        top: 60px;
-        left: 0;
-        right: 0;
-        bottom: 100px;
-        z-index: 1;
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      background: inherit;
+      position: fixed;
+      top: 60px;
+      bottom: 100px;
+      left: 0;
+      right: 0;
     }
 
     .message {
-        background-color: #ffffff;
-        padding: 8px 12px;
-        margin-bottom: 8px;
-        color: #000000;
-        line-height: 1.4;
-        font-size: 14px;
-        max-width: 70%;
-        border-radius: 12px;
-        word-wrap: break-word;
-        display: inline-block;
-        margin-right: auto;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-        clear: both;
+      background: #fff;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      font-size: 14px;
+      border-radius: 12px;
+      max-width: 70%;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      clear: both;
     }
 
-    .message[data-sender="${client.username}"] {
-        background-color: #fee500;
-        margin-left: auto;
-        margin-right: 0;
+    .message.me {
+      background: #fee500;
+      margin-left: auto;
+    }
+
+    .dark-mode .message {
+      background: #2d2d2d;
+      color: #fff;
+      box-shadow: 0 1px 2px rgba(255,255,255,0.05);
+    }
+
+    .dark-mode .message.me {
+      background: #3a3a3a;
     }
 
     .system-message {
-        text-align: center;
-        background-color: transparent;
-        color: #666;
-        font-size: 12px;
-        padding: 8px;
-        margin: 8px 0;
-        box-shadow: none;
+      text-align: center;
+      font-size: 12px;
+      color: #666;
+      margin: 8px 0;
+    }
+
+    .dark-mode .system-message {
+      color: #999;
     }
 
     #inputArea {
-        background-color: #ffffff;
-        padding: 10px 16px;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 100px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        border-top: 1px solid #e6e6e6;
-        z-index: 2;
+      height: 100px;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #fff;
+      border-top: 1px solid #e6e6e6;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
     }
 
     #messageInput {
-        flex: 1;
-        padding: 12px;
-        margin: 0;
-        border: none;
-        border-radius: 21px;
-        background-color: #f8f8f8;
-        color: #000000;
-        font-size: 14px;
-        outline: none;
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 21px;
+      font-size: 14px;
+      background: #f8f8f8;
+      color: #000;
     }
 
     #messageInput::placeholder {
-        color: #999999;
+      color: #999;
     }
 
-    #messageInput:focus {
-        background-color: #f8f8f8;
+    .dark-mode #inputArea {
+      background: #2d2d2d;
+      border-top: 5px solid #3a3a3a;
     }
 
-    #sendButton {
-        display: none;
+    .dark-mode #messageInput {
+      background: #3a3a3a;
+      color: #fff;
+    }
+
+    .dark-mode #messageInput::placeholder {
+      color: #888;
     }
 
     ::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    ::-webkit-scrollbar-track {
-        background: transparent;
+      width: 6px;
     }
 
     ::-webkit-scrollbar-thumb {
-        background: rgba(0, 0, 0, 0.2);
-        border-radius: 3px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 3px;
     }
 
     ::-webkit-scrollbar-thumb:hover {
-        background: rgba(0, 0, 0, 0.3);
+      background: rgba(0, 0, 0, 0.3);
     }
 
-    h1 {
-        color: #ffffff;
-    }
-
-    button {
-        background-color: #27ae60;
-        color: white;
-        padding: 12px 25px;
-        border: none;
-        border-radius: 25px;
-        cursor: pointer;
-        font-size: 16px;
-        font-weight: bold;
-        transition: all 0.3s ease;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-
-    button:active {
-        transform: translateY(0);
-    }
+    #sendButton { display: none; }
   </style>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
 </head>
 <body>
   <div class="header">
     <div class="header-left">
-      <!-- 프로필 이미지 삭제, 사용자 아이콘으로 대체 -->
       <i class="fas fa-user-circle" style="font-size:36px; color:#4a90e2;"></i>
       <span class="channel-name">ChatClient</span>
     </div>
     <div class="header-right">
-      <!-- 3줄(햄버거) 아이콘 버튼 삭제 -->
       <button class="icon-button" id="darkModeToggle"><i class="fas fa-moon"></i></button>
     </div>
   </div>
   <div id="chat"></div>
-  
-  <!-- 텍스트 입력 폼 -->
   <div id="inputArea">
     <input type="text" id="messageInput" placeholder="메시지를 입력하세요" />
     <button id="sendButton">전송</button>
@@ -283,67 +188,48 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
-    // 다크모드 토글 기능
-    document.addEventListener('DOMContentLoaded', () => {
-      const darkModeToggle = document.getElementById('darkModeToggle');
-      const body = document.body;
-      
-      // 저장된 테마 불러오기
-      const savedTheme = localStorage.getItem('theme');
-      if (savedTheme === 'dark') {
-        body.classList.add('dark-mode');
-        darkModeToggle.querySelector('i').classList.replace('fa-moon', 'fa-sun');
-      }
+    const body = document.body;
+    const darkToggle = document.getElementById('darkModeToggle');
+    const icon = darkToggle.querySelector('i');
 
-      darkModeToggle.addEventListener('click', () => {
-        body.classList.toggle('dark-mode');
-        const isDark = body.classList.contains('dark-mode');
-        
-        // 아이콘 변경
-        const icon = darkModeToggle.querySelector('i');
-        if (isDark) {
-          icon.classList.replace('fa-moon', 'fa-sun');
-          localStorage.setItem('theme', 'dark');
-        } else {
-          icon.classList.replace('fa-sun', 'fa-moon');
-          localStorage.setItem('theme', 'light');
-        }
-      });
-    });
+    if (localStorage.getItem('theme') === 'dark') {
+      body.classList.add('dark-mode');
+      icon.classList.replace('fa-moon', 'fa-sun');
+    }
 
-    // 채팅 기능
+    darkToggle.onclick = () => {
+      body.classList.toggle('dark-mode');
+      const dark = body.classList.contains('dark-mode');
+      icon.classList.replace(dark ? 'fa-moon' : 'fa-sun', dark ? 'fa-sun' : 'fa-moon');
+      localStorage.setItem('theme', dark ? 'dark' : 'light');
+    };
+
     const chatDiv = document.getElementById('chat');
-    const socket = io();  // 서버와 소켓 연결
+    const input = document.getElementById('messageInput');
+    const socket = io();
 
-    // 서버로부터 chat_message 이벤트를 받을 때
-    socket.on('chat_message', (message) => {
-      const messageDiv = document.createElement('div');
-      messageDiv.classList.add('message');
-      messageDiv.textContent = message;
-      chatDiv.appendChild(messageDiv);
+    socket.on('chat_message', (msg) => {
+      const div = document.createElement('div');
+      div.className = 'message';
+      if (msg.startsWith('[me]')) {
+        div.classList.add('me');
+        msg = msg.slice(4);
+      }
+      div.textContent = msg;
+      chatDiv.appendChild(div);
       chatDiv.scrollTop = chatDiv.scrollHeight;
     });
 
-    // 전송 버튼 클릭 시 서버로 메시지 보내기
-    document.getElementById('sendButton').onclick = function() {
-      const message = document.getElementById('messageInput').value;
-      if (message.trim() !== '') {
-        socket.emit('send_chat_message', message);  // 서버로 메시지 전송
-        document.getElementById('messageInput').value = '';  // 입력칸 초기화
+    const send = () => {
+      const msg = input.value.trim();
+      if (msg) {
+        socket.emit('send_chat_message', msg);
+        input.value = '';
       }
     };
 
-    // 엔터키 이벤트 리스너 추가
-    document.getElementById('messageInput').addEventListener('keypress', function(event) {
-      if (event.key === 'Enter') {
-        const message = this.value;
-        if (message.trim() !== '') {
-          socket.emit('send_chat_message', message);
-          this.value = '';
-        }
-      }
-    });
-
+    document.getElementById('sendButton').onclick = send;
+    input.addEventListener('keypress', e => e.key === 'Enter' && send());
   </script>
 </body>
 </html>
